@@ -1,0 +1,6 @@
+# check with: ncdu -X .dockerignore
+.devcontainer
+.git
+.github
+.pre-commit-config.yaml
+README.md
