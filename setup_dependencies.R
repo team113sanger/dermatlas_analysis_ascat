@@ -159,7 +159,8 @@ handle_discrepancies <- function(required_packages, force) {
         renv::install(required_packages)
         renv::snapshot()
     } else {
-        stop(msg)
+        message(msg)
+        quit(status = 1)
     }
 }
 
@@ -246,6 +247,11 @@ main <- function(force = FALSE) {
     cli_args <- simple_argparse()
     force <- cli_args$force
 
+    if (!requireNamespace("renv", quietly = TRUE)) {
+        message("renv is not installed. Please install renv and try again.")
+        quit(status = 1)
+    }
+
     # Define paths to the lockfile and dependencies file
     lockfile_path <- "renv.lock"
     dependencies_file <- "dependencies.R"
@@ -254,7 +260,7 @@ main <- function(force = FALSE) {
 
     # Run the setup dependencies function
     setup_dependencies(lockfile_path, required_packages, force)
-    
+
     print("Dependencies setup complete.")
 }
 
