@@ -41,6 +41,7 @@ build:
     - .specific-variables
     - .component-script_docker-build
     - .component-rules-except-release
+  timeout: 2 hours
 
 
 publish-develop:

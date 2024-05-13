@@ -88,6 +88,7 @@ RUN \
 
 
 WORKDIR $PROJECT_DIRECTORY
+
 COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
 COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
@@ -97,3 +98,15 @@ RUN R --version && \
     R --slave -e 'packageVersion("ASCAT")' && \
     R --slave -e 'packageVersion("GenomicRanges")' && \
     R --slave -e 'packageVersion("IRanges")'
+
+COPY --chown="${USER_NAME}:${USER_NAME}" . .
+
+# Reapply permissions after all installation and copying is done so the user can
+# manipulate the files if necessary
+RUN \
+    chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
+    && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}"
+
+USER "${USER_NAME:?}"
+
+CMD ["/bin/bash"]
