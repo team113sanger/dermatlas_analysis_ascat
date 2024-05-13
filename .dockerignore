@@ -69,12 +69,12 @@ docs/
 # translation temp files
 po/*~
 
+# RStudio Connect folder
+rsconnect/
+
 # Ignore Renv contents (not all)
 renv/library/*
 renv/staging/*
-
-# RStudio Connect folder
-rsconnect/
 
 # pre-commit
 precommit_cache/
