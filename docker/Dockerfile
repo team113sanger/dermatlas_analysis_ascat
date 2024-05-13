@@ -83,11 +83,11 @@ RUN \
     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
 WORKDIR $PROJECT_DIRECTORY
-COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "renv/activate.R", "renv/settings.json", "setup_dependencies.R", "./"]
+COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
 COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
+# --mount=type=cache,target=${RENV_PATHS_CACHE:?},sharing=locked \
 RUN \
-    --mount=type=cache,target=${RENV_PATHS_CACHE:?},sharing=locked \
     tree . -a -L 2 && \
     Rscript setup_dependencies.R --force
 
