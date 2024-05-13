@@ -20,7 +20,8 @@ ENV \
     OPT_DIRECTORY="/opt" \
     USER_NAME="admin" \
     USER_DIRECTORY="/home/admin" \
-    R_LIB_DIR="/usr/local/lib/R/site-library"
+    LC_ALL="en_US.UTF-8" \
+    LANG="en_US.UTF-8"
 
 ENV \
     USER_BASHRC="${USER_DIRECTORY:?}/.bashrc" \
@@ -29,14 +30,25 @@ ENV \
     PROJECT_DIRECTORY="${OPT_DIRECTORY:?}/repo" \
     RENV_DIRECTORY="${OPT_DIRECTORY:?}/renv" \
     RENV_PATHS_CACHE="${OPT_DIRECTORY:?}/renv-cache" \
-    LOGGING_DIRECTORY="${DATA_DIRECTORY:?}/logs"
+    LOGGING_DIRECTORY="${DATA_DIRECTORY:?}/logs" \
+    OTHER_INSTALLS_DIRECTORY="${OPT_DIRECTORY:?}/other-installs" \
+    OTHER_INSTALLS_LIB="${OPT_DIRECTORY:?}/other-installs/lib" \
+    OTHER_INSTALLS_BIN="${OPT_DIRECTORY:?}/other-installs/bin"
+
 
 ENV \
+    PATH="${OTHER_INSTALLS_BIN:?}:$PATH" \
+    LD_LIBRARY_PATH="${OTHER_INSTALLS_LIB:?}" \
+    VER_ALLELECOUNT="4.3.0" \
+    VER_HTSLIB="1.17" \
+    VER_LIBDEFLATE="v1.9" \
     RENV_PATHS_LIBRARY="${RENV_DIRECTORY:?}/library"
 
 RUN \
-    useradd "${USER_NAME}" --shell /bin/bash --create-home --home-dir "${USER_DIRECTORY}" \
-    && mkdir -p "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${OPT_DIRECTORY:?}" "${RENV_DIRECTORY:?}" "${RENV_PATHS_LIBRARY:?}" "${RENV_PATHS_CACHE:?}" \
+    locale-gen "${LANG:?}" \
+    && update-locale LANG="${LANG:?}" \
+    && useradd "${USER_NAME}" --shell /bin/bash --create-home --home-dir "${USER_DIRECTORY}" \
+    && mkdir -p "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${OPT_DIRECTORY:?}" "${RENV_DIRECTORY:?}" "${RENV_PATHS_LIBRARY:?}" "${RENV_PATHS_CACHE:?}" "${OTHER_INSTALLS_LIB:?}" "${OTHER_INSTALLS_BIN:?}" \
     && chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
     && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" 
 
@@ -68,34 +80,18 @@ RUN \
     && rm -rf /var/lib/apt/lists/*
 
 
-# TODO - DO WE NEED TO INSTALL BIOCMANAGER OR LET RENV DO IT?
-# RUN \
-#     install2.r --error --skipinstalled --ncpus -1 \
-#     renv \
-#     devtools \
-#     BiocManager \ 
-#     && R --slave -e "BiocManager::install(version = '3.16')" \
-#     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+COPY --chown="${USER_NAME}:${USER_NAME}" ["docker/build/install_libdeflate.sh", "docker/build/install_htslib.sh", "docker/build/install_alleleCount_C.sh", "/tmp/"]
 RUN \
-    install2.r --error --skipinstalled --ncpus -1 \
-    renv \
-    devtools \
-    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+    /tmp/install_libdeflate.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
+    /tmp/install_htslib.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
+    /tmp/install_alleleCount_C.sh "${OTHER_INSTALLS_DIRECTORY:?}"
+
 
 WORKDIR $PROJECT_DIRECTORY
 COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
 COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
-# --mount=type=cache,target=${RENV_PATHS_CACHE:?},sharing=locked \
-RUN \
-    tree . -a -L 2 && \
-    Rscript setup_dependencies.R --force
-
-# # https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md#run---mounttypecache
-
-# # R -e "install.packages('renv', lib = '${RENV_PATHS_LIBRARY:?}', repos = 'https://cloud.r-project.org')" \
-# # && R -e "install.packages('devtools', lib = '${RENV_PATHS_LIBRARY:?}', repos = 'https://cloud.r-project.org')"
-
+RUN Rscript setup_dependencies.R --force
 
 RUN R --version && \
     R --slave -e 'packageVersion("ASCAT")' && \
