@@ -181,11 +181,12 @@ setup_dependencies <- function(lockfile_path, required_packages, force) {
     discrepancies_found <- check_configuration_discrepancies(lockfile, required_packages)
     
     if (discrepancies_found) {
+        message("There were R package discrepancies found between human defined dependencies and the lockfile")
         # Either exit with user instructions or if forced, install the
         # dependencies and update the lockfile
         handle_discrepancies(required_packages, force)
     } else {
-        message("No discrepancies found. Restoring environment from lockfile.")
+        message("No R package discrepancies found. Restoring environment from lockfile.")
         renv::restore()
     }
   }
