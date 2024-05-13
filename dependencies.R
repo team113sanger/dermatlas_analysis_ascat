@@ -16,6 +16,7 @@ BIOCONDUCTOR_VERSION <- "3.16"
 # UPDATE THE RENV SETTINGS
 if (requireNamespace("renv", quietly = TRUE)) {
     renv::settings$bioconductor.version(BIOCONDUCTOR_VERSION)
+    renv::settings$snapshot.type("all")
 } else {
   message("renv is not installed. Please install renv and try again.")
   quit(status = 1)
