@@ -1,12 +1,52 @@
+# MUTLI-STAGE DOCKERFILE for building a Python image
+# STAGE 1: builder is the disposable image that makes build products into /opt
+# STAGE 2: (default) is the final image that is copied from /opt in the builder image
+
+########################
+# STAGE 1: builder     #
+########################
+
+# IMPORTANT
+# If you change the base image, you will need to update the
+# PRE_FETCH_BASE_IMAGE variable in the .gitlab-ci.yml file also.
+
+
 FROM rocker/r-base:4.2.2 as builder
 
-USER  root
 
-RUN apt-get update -y && \
-    apt-get install -yq --no-install-recommends \
+USER root
+ENV \
+    DATA_DIRECTORY="/data" \
+    OPT_DIRECTORY="/opt" \
+    USER_NAME="admin" \
+    USER_DIRECTORY="/home/admin" \
+    R_LIB_DIR="/usr/local/lib/R/site-library"
+
+ENV \
+    USER_BASHRC="${USER_DIRECTORY:?}/.bashrc" \
+    USER_BIN_DIRECTORY="${USER_DIRECTORY:?}/.local/bin" \
+    SSH_DIR="${USER_DIRECTORY:?}/.ssh" \
+    PROJECT_DIRECTORY="${OPT_DIRECTORY:?}/repo" \
+    RENV_DIRECTORY="${OPT_DIRECTORY:?}/renv" \
+    RENV_PATHS_CACHE="${OPT_DIRECTORY:?}/renv-cache" \
+    LOGGING_DIRECTORY="${DATA_DIRECTORY:?}/logs"
+
+ENV \
+    RENV_PATHS_LIBRARY="${RENV_DIRECTORY:?}/library"
+
+RUN \
+    useradd "${USER_NAME}" --shell /bin/bash --create-home --home-dir "${USER_DIRECTORY}" \
+    && mkdir -p "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${OPT_DIRECTORY:?}" "${RENV_DIRECTORY:?}" "${RENV_PATHS_LIBRARY:?}" "${RENV_PATHS_CACHE:?}" \
+    && chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
+    && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" 
+
+RUN \
+    apt-get update -y \
+    && apt-get install -yq --no-install-recommends \
     build-essential \
     apt-transport-https \
     curl \
+    tree \
     ca-certificates \
     libtasn1-dev \
     nettle-dev \
@@ -15,95 +55,49 @@ RUN apt-get update -y && \
     zlib1g-dev \
     libbz2-dev \
     liblzma-dev \
-    libcurl4-gnutls-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libxml2-dev \
     libncurses-dev \
-    r-cran-devtools \
-    r-bioc-genomicranges && \
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-RUN locale-gen en_US.UTF-8 && \
-    update-locale LANG=en_US.UTF-8
 
-ENV OPT="/opt/dermatlas"
-ENV PATH="${OPT}/bin:$PATH" \
-    LD_LIBRARY_PATH="${OPT}/lib" \
-    R_LIBS="$OPT/R-lib" \
-    LC_ALL="en_US.UTF-8" \
-    LANG="en_US.UTF-8"
-ENV R_LIBS_USER="$R_LIBS"
+# TODO - DO WE NEED TO INSTALL BIOCMANAGER OR LET RENV DO IT?
+# RUN \
+#     install2.r --error --skipinstalled --ncpus -1 \
+#     renv \
+#     devtools \
+#     BiocManager \ 
+#     && R --slave -e "BiocManager::install(version = '3.16')" \
+#     && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+RUN \
+    install2.r --error --skipinstalled --ncpus -1 \
+    renv \
+    devtools \
+    && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
 
-ENV VER_ALLELECOUNT="4.3.0" \
-    VER_HTSLIB="1.17" \
-    VER_LIBDEFLATE="v1.9"
+WORKDIR $PROJECT_DIRECTORY
+COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "renv/activate.R", "renv/settings.json", "setup_dependencies.R", "./"]
+COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
-COPY build/install_libdeflate.sh /tmp/.
-RUN /tmp/install_libdeflate.sh $OPT
+RUN \
+    --mount=type=cache,target=${RENV_PATHS_CACHE:?},sharing=locked \
+    tree . -a -L 2 && \
+    Rscript setup_dependencies.R --force
 
-COPY build/install_htslib.sh /tmp/.
-RUN /tmp/install_htslib.sh $OPT
+# # https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md#run---mounttypecache
 
-COPY build/install_alleleCount_C.sh /tmp/.
-RUN /tmp/install_alleleCount_C.sh $OPT
+# # R -e "install.packages('renv', lib = '${RENV_PATHS_LIBRARY:?}', repos = 'https://cloud.r-project.org')" \
+# # && R -e "install.packages('devtools', lib = '${RENV_PATHS_LIBRARY:?}', repos = 'https://cloud.r-project.org')"
 
-COPY build/install_R_packages.R /tmp/.
-RUN  mkdir -p $R_LIBS && Rscript /tmp/install_R_packages.R
 
-FROM rocker/r-base:4.2.2
-
-USER root
-
-RUN apt-get -yq update && \
-    apt-get install -yq --no-install-recommends \
-    apt-transport-https \
-    curl \
-    ca-certificates \
-    bzip2 \
-    zlib1g \
-    liblzma5 \
-    libncurses5-dev \
-    p11-kit \
-    r-bioc-genomicranges \
-    r-cran-argparser \
-    unattended-upgrades && \
-    unattended-upgrade -d -v && \
-    apt-get remove -yq unattended-upgrades && \
-    apt-get autoremove -yq && \
-    rm -rf /var/lib/apt/lists/*
-
-# LABEL maintainer="cgphelp@sanger.ac.uk" \
-#       uk.ac.sanger.cgp="Cancer, Ageing and Somatic Mutation, Wellcome Trust Sanger Institute" \
-#       description="Dermatlas ASCAT image"
-
-ENV OPT="/opt/dermatlas"
-ENV PATH="${OPT}/bin:$PATH" \
-    LD_LIBRARY_PATH="${OPT}/lib" \
-    R_LIBS="$OPT/R-lib" \
-    R_LIBS_USER="$R_LIBS" \
-    LC_ALL="en_US.UTF-8" \
-    LANG="en_US.UTF-8"
-
-RUN mkdir -p $OPT
-COPY --from=builder $OPT $OPT
-COPY build/run_ascat.R $OPT/bin/.
-
-### this belongs in final minimised image
-
-RUN useradd ascat --shell /bin/bash --create-home --home-dir /home/ascat
-
-USER ascat
-WORKDIR /var/spool/output
-
-# Check dependencies can be found
-RUN alleleCounter --version && \
-    R --version && \
+RUN R --version && \
     R --slave -e 'packageVersion("ASCAT")' && \
     R --slave -e 'packageVersion("GenomicRanges")' && \
-    R --slave -e 'packageVersion("IRanges")' && \
-    R --slave -e 'packageVersion("ggplot2")' && \
-    R --slave -e 'packageVersion("tidyverse")' && \
-    R --slave -e 'packageVersion("optparse")' && \
-    R --slave -e 'packageVersion("valr")' && \
-    R --slave -e 'packageVersion("dplyr")' && \
-    run_ascat.R --help
-
-CMD ["/bin/bash"]
+    R --slave -e 'packageVersion("IRanges")'
