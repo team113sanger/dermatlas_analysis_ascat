@@ -13,7 +13,6 @@ RSCRIPT="Rscript"
 ASCAT_MODULE="dermatlas-ascat/3.1.2__v0.1.1"
 
 #export R_LIBS=/nfs/casm/team113da/dermatlas/lib/R-4-2.2
-#export SINGULARITY_BINDPATH="/lustre,/software"
 
 # Check positional arguments
 
@@ -74,9 +73,7 @@ info=$PROJECTDIR/metadata/allsamples2sex.tsv
 
 if [[ ! -e $info ]]; then
 	echo "Required file missing: $info. Creating file from $metadata_file."
- 	#cat $metadata_file | cut -f 6,11,22,23 > $info  # PU1 formatted differently!
- 	#cat $metadata_file | cut -f 9,14,25,26 > $info
- 	cat $metadata_file | cut -f 9,15,26,27 > $info
+	cat $metadata_file | cut -f 6,11,22,23 > $info
 fi
 
 if [[ -e $info ]]; then
@@ -118,8 +115,9 @@ for sex in male female; do
 			echo "$sex XX"
 		fi
 
-		##cmd="module load alleleCount/4.3.0; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
+		#cmd="module load alleleCount/4.3.0; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
 		cmd="export SINGULARITY_BINDPATH='/lustre,/software'; module load $ASCAT_MODULE; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
+		##cmd="module load dermatlas-ascat; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
 
 		echo $cmd
 
