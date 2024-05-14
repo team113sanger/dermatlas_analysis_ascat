@@ -27,7 +27,7 @@ fi
 
 for dir in $PROJECTDIR $OUTDIR $SCRIPTDIR $PROJECTDIR/bams; do
 	if [[ ! -d $dir ]]; then
-		echo "No such directoru: $dir"
+		echo "No such directory: $dir"
 		exit;
 	fi
 done
@@ -45,7 +45,7 @@ if [[ ${#sample_list[@]} > 1 ]]; then
 	echo "Found more than one list of submitted samples $samplelist"
 	exit
 elif [[ ${#sample_list[@]} == 0 ]]; then
-	echo "File not found: $PROJECTDIR/metadate/*tumour_normal_submitted_caveman.txt"
+	echo "File not found: $PROJECTDIR/metadata/*tumour_normal_submitted_caveman.txt"
 	exit
 else
 	sample_list=${sample_list[0]}
@@ -60,7 +60,7 @@ if [[ ${#metadata_file[@]} > 1 ]]; then
 	echo "Found more than one metadata file $metadata_file"
 	exit
 elif [[ ${#metadata_file[@]} == 0 ]]; then
-	echo "File not found: $PROJECTDIR/metadate/*_METADATA_*.t*"
+	echo "File not found: $PROJECTDIR/metadata/*_METADATA_*.t*"
 	exit
 else
 	metadata_file=${metadata_file[0]}
@@ -123,7 +123,7 @@ for sex in male female; do
 
 		echo $cmd
 
-		bsub -e logs/$tum-$norm.e -o logs/$tum-$norm.o -q normal -M $MEM -R "select[mem>$MEM && hname != 'node-14-15'] rusage[mem=$MEM]" "$cmd"
+		bsub -e logs/$tum-$norm.e -o logs/$tum-$norm.o -q normal -M $MEM -R "select[mem>$MEM] rusage[mem=$MEM]" "$cmd"
 		cd $OUTDIR
 	done
 done

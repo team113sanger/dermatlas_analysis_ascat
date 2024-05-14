@@ -113,11 +113,11 @@ plot_cn_loh <- function(df, outfile, which) {
 			theme(strip.placement = "outside",
 					plot.title = element_text(size = 8),
 					strip.background = element_blank(),
-					panel.border = element_rect(colour = "grey25", size = 0.1, linetype = "solid"),
+					panel.border = element_rect(colour = "grey25", linewidth = 0.1, linetype = "solid"),
 					panel.spacing = unit(0.0, "cm"),
 					panel.grid.major.x = element_blank(),
 					panel.grid.minor.y = element_blank(),
-					panel.grid.major.y = element_line(size = 0.5),
+					panel.grid.major.y = element_line(linewidth = 0.5),
 					legend.position = "none",
 					strip.text.x = element_text(size = 5),
 					strip.text.y = element_text(size = 6),
@@ -127,7 +127,7 @@ plot_cn_loh <- function(df, outfile, which) {
 			) +
 			labs(x = "", y = "Frequency") +
 			scale_fill_manual(values = c("blue","orange"), na.translate = FALSE) +
-			geom_hline(yintercept = 0, linetype = "solid",color = "black", size = 0.4)
+			geom_hline(yintercept = 0, linetype = "solid",color = "black", linewidth = 0.4)
 
 	pdf(outfile, width = 7.5, height = 3)
 	print(loh_plot)
@@ -149,11 +149,11 @@ plot_freq <- function(df, outfile, which) {
 		theme(strip.placement = "outside",
 			plot.title = element_text(size = 8),
 			strip.background = element_blank(),
-			panel.border = element_rect(colour = "grey25", size = 0.1, linetype = 'solid'),
+			panel.border = element_rect(colour = "grey25", linewidth = 0.1, linetype = 'solid'),
 			panel.spacing = unit(0.0, "cm"),
 			panel.grid.major.x = element_blank(),
 			panel.grid.minor.y = element_blank(),
-			panel.grid.major.y = element_line(size = 0.5),
+			panel.grid.major.y = element_line(linewidth = 0.5),
 			legend.title = element_blank(),
 			legend.position = "bottom",
 			legend.key.size = unit(0.25, "cm"),
@@ -166,7 +166,7 @@ plot_freq <- function(df, outfile, which) {
 		) +
 		labs(x = "", y = "Frequency") +
 		scale_fill_manual(values = c("blue","orange"), na.translate = FALSE) +
-		geom_hline(yintercept = 0, linetype = "solid",color = "black", size = 0.4)
+		geom_hline(yintercept = 0, linetype = "solid",color = "black", linewidth = 0.4)
 		
 
 	pdf(outfile, width = 7.5, height = 3)
@@ -262,8 +262,6 @@ segments <- data.frame()
 for (segfile in segfile_list$V1) {
 	print(paste("Reading file", segfile))
 	segs <- read.table(segfile, header = T, sep = "\t", comment.char = "", check.names = F)
-#	segs <- read.table(segfile, header = T, sep = "\t", comment.char = "")
-#	print(head(segs))
 	segs$chr <- sub("chr", "", segs$chr)
 	if (nrow(segments) == 0) {
 		segments <- segs
@@ -274,7 +272,6 @@ for (segfile in segfile_list$V1) {
 
 # Add patient sex for chrX calls
 
-#segments <- segments %>% rename(Sample = sample)
 segments <- segments %>% rename(Sample = sample) %>% 
 		left_join(sample_sex, by = "Sample") %>%
 		left_join(sample_ploidy, by = "Sample")
@@ -353,5 +350,8 @@ write.table(file = paste0(outfile, "_cn-loh.tsv"), as.data.frame(cn_counts_loh),
 
 plot_cn_loh(cn_counts_loh, paste0(outfile, "_cn-loh.pdf"), which)
 
+cnloh_segments <- segments %>% filter(CN == "neutral" & nMinor == 0)
+
+write.table(file = paste0(outfile, "_cn-loh_segments.tsv"), cnloh_segments, sep = "\t", quote = F, row.names = F)
 
 
