@@ -59,6 +59,7 @@ RUN \
     apt-transport-https \
     curl \
     tree \
+    procps \
     ca-certificates \
     libtasn1-dev \
     nettle-dev \
@@ -94,11 +95,6 @@ COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json
 
 RUN Rscript setup_dependencies.R --force
 
-RUN R --version && \
-    R --slave -e 'packageVersion("ASCAT")' && \
-    R --slave -e 'packageVersion("GenomicRanges")' && \
-    R --slave -e 'packageVersion("IRanges")'
-
 COPY --chown="${USER_NAME}:${USER_NAME}" . .
 
 # Reapply permissions after all installation and copying is done so the user can
@@ -108,5 +104,15 @@ RUN \
     && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}"
 
 USER "${USER_NAME:?}"
+
+# Build time test to confirm that the package is installed
+# TODO - remove this once CI has a better way to test
+RUN R --version && \
+    R --slave -e 'packageVersion("ASCAT")' && \
+    R --slave -e 'packageVersion("GenomicRanges")' && \
+    R --slave -e 'packageVersion("IRanges")' && \
+    R --slave -e 'packageVersion("optparse")' && \
+    R --slave -e 'packageVersion("dplyr")'
+
 
 CMD ["/bin/bash"]
