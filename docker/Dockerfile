@@ -93,7 +93,13 @@ WORKDIR $PROJECT_DIRECTORY
 COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
 COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
-RUN Rscript setup_dependencies.R --force
+RUN \
+    Rscript setup_dependencies.R --force && \
+    _RENV_SET_R_LIBS="$(ls -d ${RENV_PATHS_LIBRARY:?}/R-4.2/*/ | tr '\n' ':' | sed 's/:$//'):${R_LIBS}"
+
+# We set the R_LIBS environment variable to the renv library path so that the
+# Rscript command will use the renv library path by default.
+ENV R_LIBS="${_RENV_SET_R_LIBS}"
 
 COPY --chown="${USER_NAME}:${USER_NAME}" . .
 
@@ -103,10 +109,14 @@ RUN \
     chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
     && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}"
 
+
 USER "${USER_NAME:?}"
 
+
 # Build time test to confirm that the package is installed
-# TODO - remove this once CI has a better way to test
+# TODO - remove this once CI has a better way to test. We want to check R finds
+# these packages when outside of the repo (the repo is bootstrapped by .Rprofile)
+WORKDIR /
 RUN R --version && \
     R --slave -e 'packageVersion("ASCAT")' && \
     R --slave -e 'packageVersion("GenomicRanges")' && \
@@ -114,5 +124,5 @@ RUN R --version && \
     R --slave -e 'packageVersion("optparse")' && \
     R --slave -e 'packageVersion("dplyr")'
 
-
+WORKDIR $PROJECT_DIRECTORY
 CMD ["/bin/bash"]
