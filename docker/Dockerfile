@@ -93,13 +93,11 @@ WORKDIR $PROJECT_DIRECTORY
 COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
 COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
 
-RUN \
-    Rscript setup_dependencies.R --force && \
-    _RENV_SET_R_LIBS="$(ls -d ${RENV_PATHS_LIBRARY:?}/R-4.2/*/ | tr '\n' ':' | sed 's/:$//'):${R_LIBS}"
+RUN Rscript setup_dependencies.R --force
 
 # We set the R_LIBS environment variable to the renv library path so that the
 # Rscript command will use the renv library path by default.
-ENV R_LIBS="${_RENV_SET_R_LIBS}"
+ENV R_LIBS="/opt/renv/library/R-4.2/x86_64-pc-linux-gnu"
 
 COPY --chown="${USER_NAME}:${USER_NAME}" . .
 
