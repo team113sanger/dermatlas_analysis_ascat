@@ -4,7 +4,7 @@ REQUIRED_PACKAGES <- c(
   "dplyr@1.1.2",           # Install specific version of dplyr from CRAN
   "optparse@1.7.4",        # Install specific version of optparse from CRAN
   "ggplot2@3.4.2",         # Install specific version of ggplot2 from CRAN
-  "tidyverse@2.0.0",       # Install specific version of tidyverse from CRAN
+#   "tidyverse@2.0.0",       # Install specific version of tidyverse from CRAN
   "stringr@1.5.0",         # Install specific version of stringr from CRAN
   "bioc::IRanges@2.32.0",  # Install specific version of IRanges from Bioconductor
   "bioc::GenomicRanges@1.50.2", # Install specific version of GenomicRanges from Bioconductor
