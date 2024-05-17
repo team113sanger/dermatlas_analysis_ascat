@@ -1,33 +1,12 @@
-#.libPaths(c("/nfs/casm/team113da/users/kw10/lib/R-4.1.3/"))
-#.libPaths(c(.libPaths(), "/software/team113/dermatlas/R/R-4.2.2/lib/R/library/", "/nfs/casm/team113da/dermatlas/lib/R-4-2.2/"))
-.libPaths(c(.libPaths(), "/software/team113/dermatlas/R/R-4.2.2/lib/R/library/"))
-.libPaths()
-
-suppressMessages(library(ASCAT))
-suppressMessages(library(dplyr))
-suppressMessages(library(optparse))
-
-########## Load alleleCount/4.3.0 ##########
-#
-#print("Loading alleleCount/4.3.0")
-#
-#load_status <- system("bash -c \"module load alleleCount/4.3.0\"", intern = F, ignore.stdout   = T)
-#
-#if (as.numeric(load_status > 0)) {
-#	stop("Problem loading alleleCount/4.3.0")
-#} else {
-#	print("Loaded alleleCount 4.3.0")
-#}
-
-########## Test for alleleCounter ##########
+#!/usr/bin/env Rscript
+library(ASCAT)
+library(dplyr)
+library(optparse)
 
 allelecounter_exe = "alleleCounter"
 
-allelecount_status <- system("alleleCounter", intern = F, ignore.stdout = T)
+# allelecount_status <- system("alleleCounter", intern = F, ignore.stdout = T)
 
-if (allelecount_status == 127) {
-	stop("alleleCounter/4.3.0 module not loaded.")
-}
 
 ########## Create an options list and parse options ##########
 
@@ -36,9 +15,13 @@ option_list<- list(
   make_option(c("--norm_bam"), action = "store_true", default = NA, type = "character", help = "Path to the normal BAM file"), 
   make_option(c("--tum_name"), action = "store_true", default = NA, type = "character", help = "Tumour sample name"), 
   make_option(c("--norm_name"), action = "store_true", default = NA, type = "character", help = "Normal sample name"), 
+  make_option(c("--ref_file"), action = "store_true", default = NA, type = "character", help = "Reference genome file"), 
+  make_option(c("--bed_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
+  make_option(c("--alleles"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"),   make_option(c("--gc_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
+  make_option(c("--rt_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
   make_option(c("--sex"), action = "store_true", default = NA, type = "character", help = "Patient sex, XX or XY"), 
-  make_option(c("--project_dir"), action = "store_true", type = "character", default = NA,  help = "This is the path of the project directory"), 
   make_option(c("--outdir" ), action = "store_true", type = "character", default = NA, help = "Path to the output directory")
+
 )
 
 arguments <- parse_args(OptionParser(option_list = option_list), positional_arguments = 0)
@@ -81,17 +64,6 @@ if (is.na(args$sex) || ((! is.na(args$sex) && (args$sex != "XX" && args$sex != "
 	stop("Patient sex must be provided as --sex XX or --sex XY")
 }
 
-
-# Check project directory exists
-
-if (is.na(args$project_dir)) {
-	stop("Provide a path to the project directory with --project_dir")
-} else {
-	if (! dir.exists(args$project_dir)) {
-		stop(paste("Directory does not exist:", args$project_dir))
-	}
-}
-
 # Check output directory
 
 if (is.na(args$outdir)) {
@@ -103,8 +75,8 @@ if (is.na(args$outdir)) {
 	} else {
 		print(paste("Output directory exist:", args$outdir))
 	}
-	print(paste("Moving to output directory", args$outdir))
-	setwd(args$outdir)
+	# print(paste("Moving to output directory", args$outdir))
+	# setwd(args$outdir)
 	print(paste("Working dirctory is:", getwd()))
 }
 
@@ -113,9 +85,13 @@ tum_bam <- args$tum_bam
 norm_bam <- args$norm_bam
 tum_name <- args$tum_name
 norm_name <- args$norm_name
-sex <- args$sex  # XX or XY
-PROJECTDIR <- args$project_dir
+sex <- args$sex 
 outdir <- args$outdir
+ref_file <- args$ref_file
+bed_file <- args$bed_file
+alleles <- args$alleles
+gc_file <- args$gc_file
+rt_file <- args$rt_file
 
 print(paste("Tumour BAM is", tum_bam))
 print(paste("Normal BAM is", norm_bam))
@@ -128,21 +104,9 @@ print(paste("Output dir is", outdir))
 
 ########## Check required input files ##########
 
-# Shared reference files
-
-ref_file = "/lustre/scratch124/casm/team113/ref/human/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-bed_file = "/lustre/scratch125/casm/team113da/projects/DERMATLAS/metadata/references/baitset/DNA/GRCh38_WES5_canonical_pad100.merged.bed"
-
-# ASCAT/Battenberg files in project directory
-
-alleles = paste0(PROJECTDIR, "/resources/ascat/1000G_loci_hg38_chr/1kg.phase3.v5a_GRCh38nounref_allele_index_chr")
-loci = paste0(PROJECTDIR, "/resources/ascat/1000G_loci_hg38_chr/1kg.phase3.v5a_GRCh38nounref_loci_chr")
-gc_file = paste0(PROJECTDIR, "/resources/ascat/1000G_GC_exome_chr.txt")
-rt_file = paste0(PROJECTDIR, "/resources/ascat/1000G_RT_exome_chr.txt")
-
 # Check that required inputs exist
 
-for (file in c(ref_file, bed_file, gc_file, rt_file)) {
+for (file in c(gc_file, rt_file)) {
 	if(! file.exists(file)) {
 		stop(paste("Reference file does not exist:", file))
 	} else {
@@ -150,7 +114,7 @@ for (file in c(ref_file, bed_file, gc_file, rt_file)) {
 	}
 }
 
-for (prefix in c(alleles, loci)) {
+for (prefix in c(alleles)) {
 	dirs <- dirname(prefix)
 	if (! dir.exists(dirs)) {
 		stop(paste("Directory does not exist:", dirs))
@@ -160,6 +124,12 @@ for (prefix in c(alleles, loci)) {
 }
 
 
+
+allele_prefix <- paste0(alleles, "/", "1kg.phase3.v5a_GRCh38nounref_allele_index_chr")
+
+loci_prefix <- paste0(alleles, "/", "1kg.phase3.v5a_GRCh38nounref_loci_chr")
+print(allele_prefix)
+print(loci_prefix)
 
 ########## Run ASCAT ##########
 
@@ -171,9 +141,9 @@ ascat.prepareHTS(
        tumourname = tum_name,
        normalname = norm_name,
        allelecounter_exe = allelecounter_exe,
-       alleles.prefix = alleles,
-       loci.prefix = loci,
-	   gender = sex,
+       alleles.prefix = allele_prefix,
+       loci.prefix = loci_prefix,
+       gender = sex,
        genomeVersion = "hg38",
        nthreads = 8,
        tumourLogR_file = NA,
