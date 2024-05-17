@@ -11,7 +11,7 @@
 # PRE_FETCH_BASE_IMAGE variable in the .gitlab-ci.yml file also.
 
 
-FROM rocker/tidyverse:4.2.2 as builder
+FROM rocker/r-base:4.2.2 as builder
 
 
 USER root
