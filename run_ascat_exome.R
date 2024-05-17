@@ -5,9 +5,6 @@ library(optparse)
 
 allelecounter_exe = "alleleCounter"
 
-# allelecount_status <- system("alleleCounter", intern = F, ignore.stdout = T)
-
-
 ########## Create an options list and parse options ##########
 
 option_list<- list(
@@ -17,8 +14,9 @@ option_list<- list(
   make_option(c("--norm_name"), action = "store_true", default = NA, type = "character", help = "Normal sample name"), 
   make_option(c("--ref_file"), action = "store_true", default = NA, type = "character", help = "Reference genome file"), 
   make_option(c("--bed_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
-  make_option(c("--alleles"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"),   make_option(c("--gc_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
-  make_option(c("--rt_file"), action = "store_true", default = NA, type = "character", help = "Bait regions used for WES"), 
+  make_option(c("--per_chrom"), action = "store_true", default = NA, type = "character", help = "Directory containing ASCAT allele and loci per chrom files"),   
+  make_option(c("--gc_file"), action = "store_true", default = NA, type = "character", help = "ASCAT GC correctionfile"), 
+  make_option(c("--rt_file"), action = "store_true", default = NA, type = "character", help = "ASCAT Rep timing correction file"), 
   make_option(c("--sex"), action = "store_true", default = NA, type = "character", help = "Patient sex, XX or XY"), 
   make_option(c("--outdir" ), action = "store_true", type = "character", default = NA, help = "Path to the output directory")
 
@@ -66,19 +64,16 @@ if (is.na(args$sex) || ((! is.na(args$sex) && (args$sex != "XX" && args$sex != "
 
 # Check output directory
 
-if (is.na(args$outdir)) {
-	stop("Provide a path to the output directory with --outdir")
-} else {
-	if (!dir.exists(args$outdir)) {
-		dir.create(args$outdir)
-		print(paste("Creating output directory", args$outdir))
-	} else {
-		print(paste("Output directory exist:", args$outdir))
-	}
-	# print(paste("Moving to output directory", args$outdir))
-	# setwd(args$outdir)
-	print(paste("Working dirctory is:", getwd()))
-}
+# if (is.na(args$outdir)) {
+# 	stop("Provide a path to the output directory with --outdir")
+# } else {
+# 	if (!dir.exists(args$outdir)) {
+# 		dir.create(args$outdir)
+# 		print(paste("Creating output directory", args$outdir))
+# 	} else {
+# 		print(paste("Output directory exist:", args$outdir))
+# 	}
+# }
 
 
 tum_bam <- args$tum_bam
@@ -89,7 +84,7 @@ sex <- args$sex
 outdir <- args$outdir
 ref_file <- args$ref_file
 bed_file <- args$bed_file
-alleles <- args$alleles
+per_chrom_files <- args$per_chrom
 gc_file <- args$gc_file
 rt_file <- args$rt_file
 
@@ -98,7 +93,12 @@ print(paste("Normal BAM is", norm_bam))
 print(paste("Tumour ID is", tum_name))
 print(paste("Normal ID is", norm_name))
 print(paste("Sex is", sex))
-print(paste("Output dir is", outdir))
+print(paste("Reference genome is", ref_file))
+print(paste("Bait regions are", bed_file))
+print(paste("ASCAT loci and allele files in", per_chrom_files))
+print(paste("ASCAT GC correction file is", gc_file))
+print(paste("ASCAT Replication Timing file is", gc_file))
+# print(paste("Output dir is", outdir))
 
 
 
@@ -114,7 +114,7 @@ for (file in c(gc_file, rt_file)) {
 	}
 }
 
-for (prefix in c(alleles)) {
+for (prefix in c(per_chrom_files)) {
 	dirs <- dirname(prefix)
 	if (! dir.exists(dirs)) {
 		stop(paste("Directory does not exist:", dirs))
@@ -125,11 +125,11 @@ for (prefix in c(alleles)) {
 
 
 
-allele_prefix <- paste0(alleles, "/", "1kg.phase3.v5a_GRCh38nounref_allele_index_chr")
+allele_prefix <- paste0(per_chrom_files, "/", "1kg.phase3.v5a_GRCh38nounref_allele_index_chr")
 
-loci_prefix <- paste0(alleles, "/", "1kg.phase3.v5a_GRCh38nounref_loci_chr")
-print(allele_prefix)
-print(loci_prefix)
+loci_prefix <- paste0(per_chrom_files, "/", "1kg.phase3.v5a_GRCh38nounref_loci_chr")
+print(paste("ASCAT allele files:" allele_prefix))
+print(paste("ASCAT loci files:" loci_prefix))
 
 ########## Run ASCAT ##########
 
