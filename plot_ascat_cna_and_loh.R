@@ -263,8 +263,8 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 
 
 
-print(paste("Reading file", file_list))
-segments <- read.table(file_list, header = TRUE, sep = "\t", comment.char = "", check.names = F)
+print(paste("Reading file", filelist))
+segments <- read.table(filelist, header = TRUE, sep = "\t", comment.char = "", check.names = F)
 segments$chr <- sub("chr", "", segments$chr)
 
 totsamples <- length(unique(segments$sample))
