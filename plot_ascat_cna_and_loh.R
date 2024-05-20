@@ -103,7 +103,6 @@ print(paste("Minimum segment size is", minsize))
 # Draw a frequency plot of cn-LOH regions
 
 plot_cn_loh <- function(df, outfile, which) {
-  # loh_plot <- ggplot(data = df, aes_string(x = "Subgroup", y = "Value", group = "Group", fill = "CN")) +
   loh_plot <- ggplot(data = df, aes(x = Subgroup, y = Value, group = Group, fill = CN)) +
     geom_bar(stat = "identity", width = 1) +
     scale_x_discrete(breaks = df$Group, labels = NULL, expand = c(0.0, 0.0)) +
@@ -187,15 +186,15 @@ get_counts <- function(segments, cn_types) {
       # filter segments by size, if requested
       if (cn %in% c("gain", "loss")) {
         if (minsize > 0) {
-          sample_chrom_segs <- segments %>% filter(chr == chrom & CN == cn & Size >= minsize)
+          sample_chrom_segs <- segments |> filter(chr == chrom & CN == cn & Size >= minsize)
         } else {
-          sample_chrom_segs <- segments %>% filter(chr == chrom & CN == cn)
+          sample_chrom_segs <- segments |> filter(chr == chrom & CN == cn)
         }
       } else if (cn == "cn-loh") {
         if (minsize > 0) {
-          sample_chrom_segs <- segments %>% filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & Size >= minsize & nMinor == 0)
+          sample_chrom_segs <- segments |> filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & Size >= minsize & nMinor == 0)
         } else {
-          sample_chrom_segs <- segments %>% filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & nMinor == 0)
+          sample_chrom_segs <- segments |> filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & nMinor == 0)
         }
       }
       windows <- IRanges(start = sample_chrom_segs$startpos, end = sample_chrom_segs$endpos)
@@ -208,11 +207,11 @@ get_counts <- function(segments, cn_types) {
       # Get the metadata columns
       mcols(c) <- cbind(mcols(c), mcols(d))
       # The IRanges 'countOverlaps' doesn't work here, some samples may be counted twice
-      overlap_counts <- distinct(as.data.frame(c)) %>%
-        count(seqnames, start, end, strand, width) %>%
-        bind_rows(as.data.frame(non_overlap)) %>%
-        select(-strand) %>%
-        replace(is.na(.), 0) %>%
+      overlap_counts <- distinct(as.data.frame(c)) |>
+        count(seqnames, start, end, strand, width) |>
+        bind_rows(as.data.frame(non_overlap)) |>
+        select(-strand) |>
+        replace(is.na(.), 0) |>
         arrange(start)
       # Get distinct rows then count total for each range
       if (cn %in% c("gain", "loss")) {
@@ -224,8 +223,8 @@ get_counts <- function(segments, cn_types) {
       if (cn == "loss") {
         result$Value <- result$Value * -1
       }
-      result <- result %>%
-        group_by(Group) %>%
+      result <- result |>
+        group_by(Group) |>
         mutate(Subgroup = 1:n(), .after = Group)
       if (nrow(cn_counts) == 0) {
         cn_counts <- result
@@ -259,32 +258,24 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 
 # Read in all segment files
 
-segfile_list <- read.table(filelist, stringsAsFactors = F, header = F)
+segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
 totsamples <- nrow(segfile_list)
 
 print(paste("Samples", totsamples))
 
 segments <- data.frame()
 
-for (segfile in segfile_list$V1) {
-  print(paste("Reading file", segfile))
-  segs <- read.table(segfile, header = T, sep = "\t", comment.char = "", check.names = F)
-  # 	segs <- read.table(segfile, header = T, sep = "\t", comment.char = "")
-  # 	print(head(segs))
-  segs$chr <- sub("chr", "", segs$chr)
-  if (nrow(segments) == 0) {
-    segments <- segs
-  } else {
-    segments <- rbind(segments, segs)
-  }
-}
 
-# Add patient sex for chrX calls
+print(paste("Reading file", segfile_list))
+segments <- read.table(segfile_list, header = TRUE, sep = "\t", comment.char = "", check.names = F)
+segments$chr <- sub("chr", "", segments$chr)
 
-# segments <- segments %>% rename(Sample = sample)
-segments <- segments %>%
-  rename(Sample = sample) %>%
-  left_join(sample_sex, by = "Sample") %>%
+
+# Add patient sex for chrX calls]
+
+segments <- segments |>
+  rename(Sample = sample) |>
+  left_join(sample_sex, by = "Sample") |>
   left_join(sample_ploidy, by = "Sample")
 
 #     Sample chr  startpos    endpos nMajor nMinor Sex Purity  Ploidy
@@ -295,7 +286,7 @@ segments <- segments %>%
 
 # Call CN gains and losses and add segment size
 
-segments <- segments %>%
+segments <- segments |>
   mutate(CN = ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) > nMajor + nMinor, "loss",
     ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) < nMajor + nMinor, "gain",
       ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) == nMajor + nMinor, "neutral",
@@ -304,7 +295,7 @@ segments <- segments %>%
         )
       )
     )
-  )) %>%
+  )) |>
   mutate(Size = endpos - startpos + 1)
 
 # segments
