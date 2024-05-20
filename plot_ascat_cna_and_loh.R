@@ -65,13 +65,13 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # List segement files from ASCAT
 filelist <- args[1]
-
+print(paste("Segment file:", filelist))
 # Ploidy and purity: Sample[tab]Purity[tab]Ploidy
 ploidy_list <- args[2]
-
+print(paste("Purity-ploidy file:", ploidy_list))
 # Patient sex: Sample[tab]Sex
 sample2sex_list <- args[3]
-
+print(paste("Sample sex file:", sample2sex_list))
 # Output file name prefix
 outfile <- args[4]
 
