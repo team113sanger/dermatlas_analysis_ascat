@@ -259,9 +259,7 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 # Read in all segment files
 
 # segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
-totsamples <- nrow(segfile_list)
 
-print(paste("Samples", totsamples))
 
 
 
@@ -269,6 +267,9 @@ print(paste("Reading file", file_list))
 segments <- read.table(file_list, header = TRUE, sep = "\t", comment.char = "", check.names = F)
 segments$chr <- sub("chr", "", segments$chr)
 
+totsamples <- length(unique(segments$sample))
+
+print(paste("Samples", totsamples))
 
 # Add patient sex for chrX calls]
 
