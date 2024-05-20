@@ -258,16 +258,15 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 
 # Read in all segment files
 
-segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
+# segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
 totsamples <- nrow(segfile_list)
 
 print(paste("Samples", totsamples))
 
-segments <- data.frame()
 
 
-print(paste("Reading file", segfile_list))
-segments <- read.table(segfile_list, header = TRUE, sep = "\t", comment.char = "", check.names = F)
+print(paste("Reading file", file_list))
+segments <- read.table(file_list, header = TRUE, sep = "\t", comment.char = "", check.names = F)
 segments$chr <- sub("chr", "", segments$chr)
 
 
