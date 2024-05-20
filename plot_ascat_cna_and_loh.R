@@ -186,15 +186,15 @@ get_counts <- function(segments, cn_types) {
       # filter segments by size, if requested
       if (cn %in% c("gain", "loss")) {
         if (minsize > 0) {
-          sample_chrom_segs <- segments |> filter(chr == chrom & CN == cn & Size >= minsize)
+          sample_chrom_segs <- segments %>% filter(chr == chrom & CN == cn & Size >= minsize)
         } else {
-          sample_chrom_segs <- segments |> filter(chr == chrom & CN == cn)
+          sample_chrom_segs <- segments %>% filter(chr == chrom & CN == cn)
         }
       } else if (cn == "cn-loh") {
         if (minsize > 0) {
-          sample_chrom_segs <- segments |> filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & Size >= minsize & nMinor == 0)
+          sample_chrom_segs <- segments %>% filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & Size >= minsize & nMinor == 0)
         } else {
-          sample_chrom_segs <- segments |> filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & nMinor == 0)
+          sample_chrom_segs <- segments %>% filter(!(Sex == "M" & chr == "X") & chr == chrom & CN == "neutral" & nMinor == 0)
         }
       }
       windows <- IRanges(start = sample_chrom_segs$startpos, end = sample_chrom_segs$endpos)
@@ -207,11 +207,11 @@ get_counts <- function(segments, cn_types) {
       # Get the metadata columns
       mcols(c) <- cbind(mcols(c), mcols(d))
       # The IRanges 'countOverlaps' doesn't work here, some samples may be counted twice
-      overlap_counts <- distinct(as.data.frame(c)) |>
-        count(seqnames, start, end, strand, width) |>
-        bind_rows(as.data.frame(non_overlap)) |>
-        select(-strand) |>
-        replace(is.na(.), 0) |>
+      overlap_counts <- distinct(as.data.frame(c)) %>% 
+        count(seqnames, start, end, strand, width) %>% 
+        bind_rows(as.data.frame(non_overlap)) %>% 
+        select(-strand) %>% 
+        replace(is.na(.), 0) %>% 
         arrange(start)
       # Get distinct rows then count total for each range
       if (cn %in% c("gain", "loss")) {
@@ -223,8 +223,8 @@ get_counts <- function(segments, cn_types) {
       if (cn == "loss") {
         result$Value <- result$Value * -1
       }
-      result <- result |>
-        group_by(Group) |>
+      result <- result %>% 
+        group_by(Group) %>% 
         mutate(Subgroup = 1:n(), .after = Group)
       if (nrow(cn_counts) == 0) {
         cn_counts <- result
@@ -286,7 +286,7 @@ segments <- segments |>
 
 # Call CN gains and losses and add segment size
 
-segments <- segments |>
+segments <- segments %>% 
   mutate(CN = ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) > nMajor + nMinor, "loss",
     ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) < nMajor + nMinor, "gain",
       ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) == nMajor + nMinor, "neutral",
@@ -295,7 +295,7 @@ segments <- segments |>
         )
       )
     )
-  )) |>
+  )) %>% 
   mutate(Size = endpos - startpos + 1)
 
 # segments
