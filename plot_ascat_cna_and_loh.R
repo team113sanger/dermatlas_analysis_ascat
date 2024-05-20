@@ -207,11 +207,11 @@ get_counts <- function(segments, cn_types) {
       # Get the metadata columns
       mcols(c) <- cbind(mcols(c), mcols(d))
       # The IRanges 'countOverlaps' doesn't work here, some samples may be counted twice
-      overlap_counts <- distinct(as.data.frame(c)) %>% 
-        count(seqnames, start, end, strand, width) %>% 
-        bind_rows(as.data.frame(non_overlap)) %>% 
-        select(-strand) %>% 
-        replace(is.na(.), 0) %>% 
+      overlap_counts <- distinct(as.data.frame(c)) %>%
+        count(seqnames, start, end, strand, width) %>%
+        bind_rows(as.data.frame(non_overlap)) %>%
+        select(-strand) %>%
+        replace(is.na(.), 0) %>%
         arrange(start)
       # Get distinct rows then count total for each range
       if (cn %in% c("gain", "loss")) {
@@ -223,8 +223,8 @@ get_counts <- function(segments, cn_types) {
       if (cn == "loss") {
         result$Value <- result$Value * -1
       }
-      result <- result %>% 
-        group_by(Group) %>% 
+      result <- result %>%
+        group_by(Group) %>%
         mutate(Subgroup = 1:n(), .after = Group)
       if (nrow(cn_counts) == 0) {
         cn_counts <- result
@@ -286,7 +286,7 @@ segments <- segments |>
 
 # Call CN gains and losses and add segment size
 
-segments <- segments %>% 
+segments <- segments %>%
   mutate(CN = ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) > nMajor + nMinor, "loss",
     ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) < nMajor + nMinor, "gain",
       ifelse(chr == "X" & Sex == "M" & 0.5 * round(Ploidy) == nMajor + nMinor, "neutral",
