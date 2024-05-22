@@ -96,7 +96,7 @@ print(paste("Reference genome is", ref_file))
 print(paste("Bait regions are", bed_file))
 print(paste("ASCAT loci and allele files in", per_chrom_files))
 print(paste("ASCAT GC correction file is", gc_file))
-print(paste("ASCAT Replication Timing file is", gc_file))
+print(paste("ASCAT Replication Timing file is", rt_file))
 # print(paste("Output dir is", outdir))
 
 
