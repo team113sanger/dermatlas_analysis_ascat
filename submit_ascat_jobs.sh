@@ -8,8 +8,6 @@ OUTDIR=$2
 
 SCRIPTDIR=$PROJECTDIR/scripts
 MEM=35000
-RSCRIPT="Rscript"
-ASCAT_MODULE="dermatlas-ascat/3.1.2__v0.1.1"
 
 # Check positional arguments
 
@@ -34,9 +32,23 @@ if [[ ! -e $SCRIPTDIR/ASCAT/run_ascat_exome.R ]]; then
 	exit
 fi
 
+# R version
+#
+if which Rscript &> /dev/null; then
+	echo "Using Rscript:"
+	which Rscript
+	Rscript --version
+#	echo "Using R_LIBS"
+#	echo $R_LIBS
+#	echo "Using R_LIBS_USER"
+#	echo $R_LIBS_USER
+else
+    echo "Not found: Rscript"
+    exit 1;
+fi
+
 # Get a list of samples that passed QC
 
-#sample_list=(`dir $PROJECTDIR/metadata/*_tumour_normal_submitted_caveman.txt`)
 sample_list=(`dir $PROJECTDIR/metadata/*-analysed_matched.tsv`)
 
 if [[ ${#sample_list[@]} > 1 ]]; then
@@ -72,9 +84,6 @@ info=$PROJECTDIR/metadata/allsamples2sex.tsv
 
 if [[ ! -e $info ]]; then
 	echo -e "Required file missing: $info. Creating file from $metadata_file.\n"
- 	#cat $metadata_file | cut -f 6,11,22,23 > $info  # PU1 formatted differently!
- 	#cat $metadata_file | cut -f 9,14,25,26 > $info
- 	#cat $metadata_file | cut -f 9,15,26,27 > $info
 
 	pheno_col=`awk -v RS='\t' '/Phenotype/{print NR; exit}' $metadata_file`
 	sex_col=`awk -v RS='\t' '/Sex/{print NR; exit}' $metadata_file`
@@ -94,7 +103,6 @@ if [[ ! -e $info ]]; then
 		echo "Cannot find 'OK_to_analyse_DNA?' column in metadata file $metadata_file"
 	fi
 
-	#cat $metadata_file | cut -f $pheno_col,$sex_col,$id_col,$ok_col > $info
 	awk -v col1=$pheno_col -v col2=$sex_col -v col3=$id_col -v col4=$ok_col 'BEGIN{OFS=FS="\t"} {print $col1,$col2,$col3,$col4}' $metadata_file > $info
 	awk '$2=="F"' $info | cut -f 3 | xargs -i grep {} $sample_list | sort -u > $OUTDIR/ascat_pairs_female.tsv 
 	awk '$2=="M"' $info | cut -f 3 | xargs -i grep {} $sample_list | sort -u > $OUTDIR/ascat_pairs_male.tsv
@@ -139,7 +147,7 @@ for sex in male female; do
 			echo "$sex XX"
 		fi
 
-		cmd="export SINGULARITY_BINDPATH='/lustre,/software'; module load $ASCAT_MODULE; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
+		cmd="Rscript $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
 
 		echo $cmd
 

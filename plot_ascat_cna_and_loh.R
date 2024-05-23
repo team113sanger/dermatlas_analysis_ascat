@@ -1,5 +1,3 @@
-.libPaths(c("/software/team113/dermatlas/R/R-4.2.2/lib/R/library/"))
-
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(IRanges))
 suppressPackageStartupMessages(library(GenomicRanges))
@@ -355,5 +353,3 @@ plot_cn_loh(cn_counts_loh, paste0(outfile, "_cn-loh.pdf"), which)
 cnloh_segments <- segments %>% filter(CN == "neutral" & nMinor == 0)
 
 write.table(file = paste0(outfile, "_cn-loh_segments.tsv"), cnloh_segments, sep = "\t", quote = F, row.names = F)
-
-
