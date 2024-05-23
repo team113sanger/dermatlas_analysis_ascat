@@ -1,3 +1,5 @@
+.libPaths(c("/software/team113/dermatlas/R/R-4.2.2/lib/R/library/"))
+
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(IRanges))
 suppressPackageStartupMessages(library(GenomicRanges))

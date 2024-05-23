@@ -1,8 +1,32 @@
+#!/bin/bash
 
-input_dir=$1
-target_dir=$2
+PROJECTDIR=$1
+input_dir=$2
+target_dir=$3
 
-if [ ! -d $input_dir ] || [ ! -w $input_dir ]; then
+# Check scripts directory for maf2xlsx.R script
+
+if [[ -z $PROJECTDIR || -z $input_dir || -z $target_dir ]]; then
+	echo -e "\nThis script copies relevant ASCAT files (for release) to a target directory (e.g. your local git repository)\n"
+    echo -e "Usage: $0 project_directory input_directory target_directory\n"
+	echo -e "Example: $0 /my/project/path/ /my/project/path/analysis/ASCAT/release_v1 /my/git/path/project/copy_number/ascat/release_v1\n"
+    exit 1
+fi
+
+#elif [[ ! -e $PROJECTDIR/scripts/MAF/maf2xlsx.R ]]; then
+#    echo "Cannot find required script $PROJECTDIR/scripts/MAF/maf2xlsx.R"
+#    exit 1
+#fi
+
+# Farm22
+
+RSCRIPT=/software/team113/dermatlas/R/R-4.2.2/bin/Rscript
+export R_LIBS=/software/team113/dermatlas/R/R-4.2.2/lib/R/library/
+
+if [[ ! -d $PROJECTDIR || ! -w $PROJECTDIR ]]; then
+	echo "No project directory $PROJECTDIR or not writeable"
+	exit 1
+elif [[ ! -d $input_dir || ! -w $input_dir ]]; then
 	echo "No input directory $input_dir or not writeable"
 	exit 1
 elif [ ! -d $target_dir ] || [ ! -w $target_dir ]; then
@@ -23,23 +47,17 @@ done
 
 
 ## Convert files with gene names into xlsx
-#
-#export R_LIBS=/nfs/casm/team113da/dermatlas/lib/R-4-2.2; 
-#
-#for file in `find |grep txt | grep -v README`; do 
-#	echo $file
-#	/software/team113/dermatlas/R/R-4.2.2/bin/Rscript ../../../scripts/tsv2xlsx.R $file
-#done
-#
-#for file in `find |grep scores.gistic$`; do 
-#	echo $file
-#	/software/team113/dermatlas/R/R-4.2.2/bin/Rscript ../../../scripts/tsv2xlsx.R $file
-#done
+
+
+for file in `find $input_dir |grep tsv`; do 
+	echo $file
+	$RSCRIPT ${PROJECTDIR}/scripts/tsv2xlsx.R $file
+done
 
 
 # Make a README file
 
-cat > README.txt << END
+cat > README_ASCAT_FILES.txt << END
 
 These directories contain a summary of the results from ASCAT.
 
