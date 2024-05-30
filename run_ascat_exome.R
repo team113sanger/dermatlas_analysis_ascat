@@ -61,20 +61,6 @@ if (is.na(args$sex) || ((!is.na(args$sex) && (args$sex != "XX" && args$sex != "X
   stop("Patient sex must be provided as --sex XX or --sex XY")
 }
 
-# Check output directory
-
-# if (is.na(args$outdir)) {
-# 	stop("Provide a path to the output directory with --outdir")
-# } else {
-# 	if (!dir.exists(args$outdir)) {
-# 		dir.create(args$outdir)
-# 		print(paste("Creating output directory", args$outdir))
-# 	} else {
-# 		print(paste("Output directory exist:", args$outdir))
-# 	}
-# }
-
-
 tum_bam <- args$tum_bam
 norm_bam <- args$norm_bam
 tum_name <- args$tum_name
@@ -97,7 +83,6 @@ print(paste("Bait regions are", bed_file))
 print(paste("ASCAT loci and allele files in", per_chrom_files))
 print(paste("ASCAT GC correction file is", gc_file))
 print(paste("ASCAT Replication Timing file is", rt_file))
-# print(paste("Output dir is", outdir))
 
 
 
@@ -159,7 +144,6 @@ ascat.prepareHTS(
   skip_allele_counting_tumour = F,
   skip_allele_counting_normal = F,
   seed = 485028101
-  # seed = as.integer(Sys.time())
 )
 
 
