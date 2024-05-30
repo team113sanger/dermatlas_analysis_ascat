@@ -139,6 +139,7 @@ plot_cn_loh <- function(df, outfile, which) {
 
 plot_freq <- function(df, outfile, which) {
   fq_plot <- ggplot(data = df, aes(x = Subgroup, y = Value, group = Group, fill = CN)) +
+    # fq_plot <- ggplot(data = df, aes_string(x = "Subgroup", y = "Value", group = "Group", fill = "CN")) +
     geom_bar(stat = "identity", width = 1) +
     scale_x_discrete(breaks = df$Group, labels = NULL, expand = c(0.0, 0.0)) +
     scale_y_continuous(breaks = c(-1, -0.5, 0, 0.5, 1), limits = c(-1, 1), expand = c(0.003, 0.003), labels = c("1.0", "0.5", "0.0", "0.5", "1.0")) +
@@ -256,6 +257,11 @@ sample_ploidy <- read.table(ploidy_list, stringsAsFactors = F, header = F, sep =
 colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 
 # Read in all segment files
+
+# segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
+
+
+
 
 print(paste("Reading file", filelist))
 segments <- read.table(filelist, header = TRUE, sep = "\t", comment.char = "", check.names = F)

@@ -20,8 +20,8 @@ read_stats_file <- function(file) {
 
 stats_table <- map_dfr(estimate_files, read_stats_file, .id = "File") |>
   tidyr::pivot_wider(names_from = key, values_from = value) |>
-  dplyr::mutate(Sample_ID = gsub(pattern = ".*ASCAT_estimates_",  File, replacement = "")) |>
-  dplyr::mutate(Sample_ID = gsub(pattern = "_PD.*.tsv", Sample_ID, replacement = "")) |>
+  dplyr::mutate(Sample_ID = gsub(pattern = ".*ASCAT_estimates_PD.*_",  File, replacement = "")) |>
+  dplyr::mutate(Sample_ID = gsub(pattern = ".tsv", Sample_ID, replacement = "")) |>
   dplyr::mutate(File = paste0(File))
   
 stats_table |>
