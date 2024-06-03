@@ -15,10 +15,10 @@ arguments <- parse_args(OptionParser(option_list = option_list), positional_argu
 
 args <- arguments$options
 
-estimate_files <- args$estimates_path
+estimates <- args$estimates_path
 
 estimate_files <- list.files(
-  path = estimates_path,
+  path = estimates,
   full.names = TRUE,
   pattern = "ASCAT.*.tsv"
 )
