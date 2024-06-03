@@ -40,5 +40,3 @@ foreach my $f (sort keys %stats) {
 	}
 	print join("\t", $f, @line) . "\n";
 }
-
-

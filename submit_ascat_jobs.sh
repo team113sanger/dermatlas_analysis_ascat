@@ -8,17 +8,12 @@ OUTDIR=$2
 
 SCRIPTDIR=$PROJECTDIR/scripts
 MEM=35000
-#RSCRIPT="/software/team113/dermatlas/R/R-4.2.2/bin/Rscript"
-RSCRIPT="Rscript"
-ASCAT_MODULE="dermatlas-ascat/3.1.2__v0.1.1"
-
-#export R_LIBS=/nfs/casm/team113da/dermatlas/lib/R-4-2.2
-#export SINGULARITY_BINDPATH="/lustre,/software"
 
 # Check positional arguments
 
 if [[ -z $PROJECTDIR || -z $OUTDIR ]]; then
-	echo "Usage: $0 /path/to/project/dir /path/to/output/dir"
+	echo -e "\nThis script parses the study metadata file to determine sample pairs,\nsex and submit ASCAT jobs to the farm\n\n"
+	echo -e "\tUsage: $0 /path/to/project/dir /path/to/output/dir\n"
 	exit
 fi
 
@@ -37,15 +32,30 @@ if [[ ! -e $SCRIPTDIR/ASCAT/run_ascat_exome.R ]]; then
 	exit
 fi
 
+# R version
+#
+if which Rscript &> /dev/null; then
+	echo "Using Rscript:"
+	which Rscript
+	Rscript --version
+#	echo "Using R_LIBS"
+#	echo $R_LIBS
+#	echo "Using R_LIBS_USER"
+#	echo $R_LIBS_USER
+else
+    echo "Not found: Rscript"
+    exit 1;
+fi
+
 # Get a list of samples that passed QC
 
-sample_list=(`dir $PROJECTDIR/metadata/*_tumour_normal_submitted_caveman.txt`)
+sample_list=(`dir $PROJECTDIR/metadata/*-analysed_matched.tsv`)
 
 if [[ ${#sample_list[@]} > 1 ]]; then
 	echo "Found more than one list of submitted samples $samplelist"
 	exit
 elif [[ ${#sample_list[@]} == 0 ]]; then
-	echo "File not found: $PROJECTDIR/metadata/*tumour_normal_submitted_caveman.txt"
+	echo "File not found: $PROJECTDIR/metadata/*-analysed_matched.tsv"
 	exit
 else
 	sample_list=${sample_list[0]}
@@ -73,10 +83,29 @@ fi
 info=$PROJECTDIR/metadata/allsamples2sex.tsv
 
 if [[ ! -e $info ]]; then
-	echo "Required file missing: $info. Creating file from $metadata_file."
- 	#cat $metadata_file | cut -f 6,11,22,23 > $info  # PU1 formatted differently!
- 	#cat $metadata_file | cut -f 9,14,25,26 > $info
- 	cat $metadata_file | cut -f 9,15,26,27 > $info
+	echo -e "Required file missing: $info. Creating file from $metadata_file.\n"
+
+	pheno_col=`awk -v RS='\t' '/Phenotype/{print NR; exit}' $metadata_file`
+	sex_col=`awk -v RS='\t' '/Sex/{print NR; exit}' $metadata_file`
+	id_col=`awk -v RS='\t' '/DNA_ID/{print NR; exit}' $metadata_file`
+	ok_col=`awk -v RS='\t' '/analyse_DNA/{print NR; exit}' $metadata_file`
+
+	if [[ -z $id_col ]]; then
+		id_col=`awk -v RS='\t' '/DNA ID/{print NR; exit}' $metadata_file`
+	fi
+	if [[ -z $pheno_col ]]; then
+		echo "Cannot find 'Phenotype' column in metadata file $metadata_file"
+	elif [[ -z $sex_col ]]; then
+		echo "Cannot find 'Sex' column in metadata file $metadata_file"
+	elif [[ -z $id_col ]]; then
+		echo "Cannot find DNA ID or DNA_ID column in metadata file $metadata_file"
+	elif [[ -z $ok_col ]]; then
+		echo "Cannot find 'OK_to_analyse_DNA?' column in metadata file $metadata_file"
+	fi
+
+	awk -v col1=$pheno_col -v col2=$sex_col -v col3=$id_col -v col4=$ok_col 'BEGIN{OFS=FS="\t"} {print $col1,$col2,$col3,$col4}' $metadata_file > $info
+	awk '$2=="F"' $info | cut -f 3 | xargs -i grep {} $sample_list | sort -u > $OUTDIR/ascat_pairs_female.tsv 
+	awk '$2=="M"' $info | cut -f 3 | xargs -i grep {} $sample_list | sort -u > $OUTDIR/ascat_pairs_male.tsv
 fi
 
 if [[ -e $info ]]; then
@@ -118,8 +147,7 @@ for sex in male female; do
 			echo "$sex XX"
 		fi
 
-		##cmd="module load alleleCount/4.3.0; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
-		cmd="export SINGULARITY_BINDPATH='/lustre,/software'; module load $ASCAT_MODULE; $RSCRIPT $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
+		cmd="Rscript $SCRIPTDIR/ASCAT/run_ascat_exome.R --tum_bam $tumbam --norm_bam $normbam --tum_name $tum --norm_name $norm --sex $sexchr --outdir $OUTDIR/$tum-$norm --project_dir $PROJECTDIR"
 
 		echo $cmd
 
@@ -127,4 +155,3 @@ for sex in male female; do
 		cd $OUTDIR
 	done
 done
-
