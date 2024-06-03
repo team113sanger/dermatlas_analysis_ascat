@@ -2,9 +2,23 @@
 library(dplyr)
 library(purrr)
 library(tidyr)
+library(optparse)
+
+option_list <- list(
+  make_option(c("--estimates_path"), 
+                action = "store_true", 
+                default = NA, 
+                type = "character", 
+                help = "Path to a set of ASCAT_estimates files."))
+
+arguments <- parse_args(OptionParser(option_list = option_list), positional_arguments = 0)
+
+args <- arguments$options
+
+estimate_files <- args$estimates_path
 
 estimate_files <- list.files(
-  path = ".",
+  path = estimates_path,
   full.names = TRUE,
   pattern = "ASCAT.*.tsv"
 )
@@ -22,7 +36,6 @@ stats_table <- map_dfr(estimate_files, read_stats_file, .id = "File") |>
   tidyr::pivot_wider(names_from = key, values_from = value) |>
   dplyr::mutate(Sample_ID = gsub(pattern = ".*ASCAT_estimates_",  File, replacement = "")) |>
   dplyr::mutate(Sample_ID = gsub(pattern = "_PD.*.tsv", Sample_ID, replacement = "")) |>
-
   dplyr::mutate(File = paste0(File))
   
 stats_table |>
