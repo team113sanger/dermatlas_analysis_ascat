@@ -155,4 +155,3 @@ for sex in male female; do
 		cd $OUTDIR
 	done
 done
-

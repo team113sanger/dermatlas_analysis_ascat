@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+# Changed
+- Change scripts to rely on environment files `source_me_*.sh` for setting up
+  environment variables.
+- Refact hard-coded R paths in scripts.
+
+# Removed
+- Removed `overlap_maf_ascat_cn.R` as it is encapsulated in other scripts.
+
 ## [0.3.0] Publishable Unit 3
 
 ### Removed
