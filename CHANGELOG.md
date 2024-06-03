@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] Publishable Unit 3
+
+### Removed
+- Redundant `submit_ascat_jobs.PU1.sh` -- if needed checkout to earlier tag
+
 ## [0.2.0] Publishable Unit 2
 ### Added
 - Add new `submit_ascat_jobs.sh`
