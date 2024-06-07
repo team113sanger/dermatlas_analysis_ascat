@@ -356,3 +356,7 @@ write.table(file = paste0(outfile, "_cn-loh.tsv"), as.data.frame(cn_counts_loh),
 # Draw plot
 
 plot_cn_loh(cn_counts_loh, paste0(outfile, "_cn-loh.pdf"), which)
+
+cnloh_segments <- segments %>% filter(CN == "neutral" & nMinor == 0)
+
+write.table(file = paste0(outfile, "_cn-loh_segments.tsv"), cnloh_segments, sep = "\t", quote = F, row.names = F)
