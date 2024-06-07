@@ -20,6 +20,7 @@ estimates <- args$estimates_path
 estimate_files <- list.files(
   path = estimates,
   full.names = TRUE,
+  recursive = TRUE,
   pattern = "ASCAT.*.tsv"
 )
 
