@@ -1,33 +1,30 @@
-#.libPaths(c("/nfs/casm/team113da/users/kw10/lib/R-4.1.3/"))
-#.libPaths(c(.libPaths(), "/software/team113/dermatlas/R/R-4.2.2/lib/R/library/", "/nfs/casm/team113da/dermatlas/lib/R-4-2.2/"))
-.libPaths(c(.libPaths(), "/software/team113/dermatlas/R/R-4.2.2/lib/R/library/"))
-.libPaths()
+########## Check if DERMATLAS_R_LIB is defined ##########
+
+has_dermatlas_env <- nzchar(Sys.getenv("DERMATLAS_R_LIB"))
+
+if (has_dermatlas_env) {
+	dermatlas_lib_path <- Sys.getenv("DERMATLAS_R_LIB")
+	if (dir.exists(dermatlas_lib_path)) {
+		.libPaths(c(.libPaths(), dermatlas_lib_path))
+	} else {
+		stop("Specified DERMATLAS_R_LIB path does not exist: ", dermatlas_lib_path)
+	}
+}
 
 suppressMessages(library(ASCAT))
 suppressMessages(library(dplyr))
 suppressMessages(library(optparse))
 
-########## Load alleleCount/4.3.0 ##########
-#
-#print("Loading alleleCount/4.3.0")
-#
-#load_status <- system("bash -c \"module load alleleCount/4.3.0\"", intern = F, ignore.stdout   = T)
-#
-#if (as.numeric(load_status > 0)) {
-#	stop("Problem loading alleleCount/4.3.0")
-#} else {
-#	print("Loaded alleleCount 4.3.0")
-#}
-
-########## Test for alleleCounter ##########
+########## Check for alleleCounter ##########
 
 allelecounter_exe = "alleleCounter"
 
 allelecount_status <- system("alleleCounter", intern = F, ignore.stdout = T)
 
 if (allelecount_status == 127) {
-	stop("alleleCounter/4.3.0 module not loaded.")
+	stop("Cannot find alleleCounter.")
 }
+
 
 ########## Create an options list and parse options ##########
 
