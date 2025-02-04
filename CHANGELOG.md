@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] Jan 2025
 # Changed
-- Dockerised analysis, added helpers for running in nextflow as part of dermatlas copy_number_nf 
+- Dockerised analysis + added dev tools
+- Added helpers for running in nextflow as part of `dermatlas_copy_number_nf` wrapper. 
+- `run_ascat_exome_nf.R` removes the hard-coded bedfile + ref file from run `run_ascat_exome.R` and assumed location of GC and REF files all sitting within one project dir. To merge functionalities of these scripts eventually.
+- `summarise_ascat_estimate.R` temporarily covers same functionality as `summarise_ascat_estimates.pl` to simplify down to a single language for early nextflow. Can either merge or discard
 
 ## [0.4.0] Publishable Unit 4
 # Changed
