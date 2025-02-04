@@ -81,14 +81,16 @@ RUN \
     libtiff5-dev \
     libxml2-dev \
     libncurses-dev \
+    perl \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY --chown="${USER_NAME}:${USER_NAME}" ["docker/build/install_libdeflate.sh", "docker/build/install_htslib.sh", "docker/build/install_alleleCount_C.sh", "/tmp/"]
+COPY --chown="${USER_NAME}:${USER_NAME}" ["docker/build/install_libdeflate.sh", "docker/build/install_htslib.sh", "docker/build/install_alleleCount_C.sh", "docker/build/install_perl_modules.sh","/tmp/"]
 RUN \
     /tmp/install_libdeflate.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
     /tmp/install_htslib.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
-    /tmp/install_alleleCount_C.sh "${OTHER_INSTALLS_DIRECTORY:?}"
+    /tmp/install_alleleCount_C.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
+    bash /tmp/install_perl_modules.sh -m warnings
 
 
 WORKDIR $PROJECT_DIRECTORY
