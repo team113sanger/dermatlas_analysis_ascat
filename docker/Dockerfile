@@ -21,7 +21,6 @@ ENV \
     USER_NAME="admin" \
     USER_DIRECTORY="/home/admin" \
     LC_ALL="en_US.UTF-8" \
-    RENV_CONFIG_PAK_ENABLED="TRUE" \
     LANG="en_US.UTF-8"
 
 ENV \
@@ -109,15 +108,15 @@ RUN R -e 'install.packages("renv")'
 WORKDIR $PROJECT_DIRECTORY
 
 COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
-# COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
+COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.dcf", "./renv/"]
 
 
 # Install the R packages from the lock file or the DESCRIPTION file if the lock
 # file does not exist.
 RUN if [ -f renv.lock ]; then \
-    Rscript -e 'renv::init(bare = TRUE); renv::restore()' ; \
+    Rscript -e 'renv::init(bare = TRUE, bioconductor = True); renv::restore()' ; \
     else \
-    Rscript -e 'renv::init(bare = TRUE); renv::install()' ; \
+    Rscript -e 'renv::init(bare = TRUE, bioconductor = True); renv::install()' ; \
     fi
 # Copy the rest of the project files to the container
 COPY --chown="${USER_NAME}:${USER_NAME}" . .
