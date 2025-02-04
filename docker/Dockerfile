@@ -11,7 +11,7 @@
 # PRE_FETCH_BASE_IMAGE variable in the .gitlab-ci.yml file also.
 
 
-FROM rocker/r-base:4.2.2 as builder
+FROM rocker/r-ver:4.2.2 as builder
 
 
 USER root
@@ -29,7 +29,10 @@ ENV \
     SSH_DIR="${USER_DIRECTORY:?}/.ssh" \
     PROJECT_DIRECTORY="${OPT_DIRECTORY:?}/repo" \
     RENV_DIRECTORY="${OPT_DIRECTORY:?}/renv" \
-    RENV_PATHS_CACHE="${OPT_DIRECTORY:?}/renv-cache" \
+    RENV_PATHS_ROOT="${OPT_DIRECTORY:?}/renv" \
+    RENV_PATHS_LIBRARY_ROOT="${OPT_DIRECTORY:?}/renv/library" \
+    RENV_PATHS_LIBRARY="${OPT_DIRECTORY:?}/renv/library/" \
+    RENV_PATHS_CACHE="${OPT_DIRECTORY:?}/renv-cache"  \
     LOGGING_DIRECTORY="${DATA_DIRECTORY:?}/logs" \
     OTHER_INSTALLS_DIRECTORY="${OPT_DIRECTORY:?}/other-installs" \
     OTHER_INSTALLS_LIB="${OPT_DIRECTORY:?}/other-installs/lib" \
@@ -50,7 +53,7 @@ RUN \
     && useradd "${USER_NAME}" --shell /bin/bash --create-home --home-dir "${USER_DIRECTORY}" \
     && mkdir -p "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${OPT_DIRECTORY:?}" "${RENV_DIRECTORY:?}" "${RENV_PATHS_LIBRARY:?}" "${RENV_PATHS_CACHE:?}" "${OTHER_INSTALLS_LIB:?}" "${OTHER_INSTALLS_BIN:?}" \
     && chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
-    && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" 
+    && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}"
 
 RUN \
     apt-get update -y \
@@ -78,22 +81,56 @@ RUN \
     libtiff5-dev \
     libxml2-dev \
     libncurses-dev \
+    perl \
     && rm -rf /var/lib/apt/lists/*
 
 
-COPY --chown="${USER_NAME}:${USER_NAME}" ["docker/build/install_libdeflate.sh", "docker/build/install_htslib.sh", "docker/build/install_alleleCount_C.sh", "/tmp/"]
+COPY --chown="${USER_NAME}:${USER_NAME}" ["docker/build/install_libdeflate.sh", "docker/build/install_htslib.sh", "docker/build/install_alleleCount_C.sh", "docker/build/install_perl_modules.sh","/tmp/"]
 RUN \
     /tmp/install_libdeflate.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
     /tmp/install_htslib.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
-    /tmp/install_alleleCount_C.sh "${OTHER_INSTALLS_DIRECTORY:?}"
+    /tmp/install_alleleCount_C.sh "${OTHER_INSTALLS_DIRECTORY:?}" && \
+    bash /tmp/install_perl_modules.sh -m warnings
 
 
 WORKDIR $PROJECT_DIRECTORY
 
-COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", ".Rprofile", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
-COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.json", "./renv/"]
+####################################################
+# Install R packages for bootstrapping development #
+#                                                  #
+# Use Renv+pak via a wrapper script                #
+####################################################
 
-RUN Rscript setup_dependencies.R --force
+# We use the renv package to bootstrap the R package installation and isolate them from the system
+# R installation.
+RUN R -e 'install.packages("renv")'
+
+# Copy the renv.lock file (if it exists) and the DESCRIPTION file to the
+# container (as well as the renv/ directory)
+WORKDIR $PROJECT_DIRECTORY
+
+COPY --chown="${USER_NAME}:${USER_NAME}" [".gitignore", "renv.loc[k]", "dependencies.R", "setup_dependencies.R", "./"]
+COPY --chown="${USER_NAME}:${USER_NAME}" ["renv/activate.R", "renv/settings.dcf", "./renv/"]
+
+
+# Install the R packages from the lock file or the DESCRIPTION file if the lock
+# file does not exist.
+RUN if [ -f renv.lock ]; then \
+    Rscript -e 'renv::init(bare = TRUE, bioconductor = True); renv::restore()' ; \
+    else \
+    Rscript -e 'renv::init(bare = TRUE, bioconductor = True); renv::install()' ; \
+    fi
+# Copy the rest of the project files to the container
+COPY --chown="${USER_NAME}:${USER_NAME}" . .
+
+# Reapply permissions after all installation and copying is done so the user can
+# manipulate the files if necessary
+RUN \
+    chown -R "${USER_NAME:?}:${USER_NAME:?}" "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}" \
+    && chmod -R 755 "${PROJECT_DIRECTORY:?}" "${DATA_DIRECTORY:?}" "${USER_DIRECTORY:?}" "${OPT_DIRECTORY:?}"
+
+USER "${USER_NAME:?}"
+
 
 # We set the R_LIBS environment variable to the renv library path so that the
 # Rscript command will use the renv library path by default.

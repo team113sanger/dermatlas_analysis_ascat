@@ -11,7 +11,7 @@ library(valr)
 # RPS6KA1	Sanger	GRCh38	chr1	26560781	26560781	Missense_Mutation	SNP	T	C	PD56526a
 # NEK2	Sanger	GRCh38	chr1	211674485	211674485	Missense_Mutation	SNP	C	T	PD56526a
 
-args <- commandArgs(trailingOnly = TRUE) 
+args <- commandArgs(trailingOnly = TRUE)
 
 maf_file <- args[1]
 cn_file <- args[2]
@@ -37,32 +37,33 @@ colnames(cn) <- sub("^", "ASCAT_", colnames(cn))
 colnames(maf_with_cn) <- c(colnames(vars), colnames(cn), "Difficult_region_overlap")
 
 if (!is.na(diff_regions_file)) {
-	difficult_reg <- read.table(diff_regions_file, header = F, sep = "\t", stringsAsFactors = F)
-	colnames(difficult_reg) <- c("chrom", "start", "end")
+  difficult_reg <- read.table(diff_regions_file, header = F, sep = "\t", stringsAsFactors = F)
+  colnames(difficult_reg) <- c("chrom", "start", "end")
 }
 
 # Check overlap and non-neutral CN segments
 
 for (line in 1:nrow(vars)) {
-	chr <- vars[line, "Chromosome"]
-	sample <- vars[line, "Tumor_Sample_Barcode"]
-	cn_segs <- cn %>% filter(ASCAT_chr == chr & ASCAT_Sample == sample)
-	if (nrow(cn_segs) > 0) {
-		for (cn_line in 1:nrow(cn_segs)) {
-			over <- min(vars[line, "End_Position"], cn_segs[cn_line, "ASCAT_endpos"]) - max(vars[line, "Start_Position"], cn_segs[cn_line, "ASCAT_startpos"]) + 1
-			seg_reg <- cn_segs[cn_line, c("ASCAT_chr", "ASCAT_startpos", "ASCAT_endpos")]
-			colnames(seg_reg) <- c("chrom", "start", "end")
-			seg_cov <- "NA"
-			if (over > 0) {
-				if (!is.na(diff_regions_file)) {
-					seg_cov <- bed_coverage(seg_reg, difficult_reg) %>% select(.frac) %>%
-								rename("Difficult_regions_overlap" = ".frac")
-				}
-				
-				maf_with_cn <- rbind(maf_with_cn, cbind(vars[line, ] ,cn_segs[cn_line, ], seg_cov))
-			}
-		}
-	}
+  chr <- vars[line, "Chromosome"]
+  sample <- vars[line, "Tumor_Sample_Barcode"]
+  cn_segs <- cn %>% filter(ASCAT_chr == chr & ASCAT_Sample == sample)
+  if (nrow(cn_segs) > 0) {
+    for (cn_line in 1:nrow(cn_segs)) {
+      over <- min(vars[line, "End_Position"], cn_segs[cn_line, "ASCAT_endpos"]) - max(vars[line, "Start_Position"], cn_segs[cn_line, "ASCAT_startpos"]) + 1
+      seg_reg <- cn_segs[cn_line, c("ASCAT_chr", "ASCAT_startpos", "ASCAT_endpos")]
+      colnames(seg_reg) <- c("chrom", "start", "end")
+      seg_cov <- "NA"
+      if (over > 0) {
+        if (!is.na(diff_regions_file)) {
+          seg_cov <- bed_coverage(seg_reg, difficult_reg) %>%
+            select(.frac) %>%
+            rename("Difficult_regions_overlap" = ".frac")
+        }
+
+        maf_with_cn <- rbind(maf_with_cn, cbind(vars[line, ], cn_segs[cn_line, ], seg_cov))
+      }
+    }
+  }
 }
 
 write.table(maf_with_cn, file = outfile, quote = F, sep = "\t", row.names = F)

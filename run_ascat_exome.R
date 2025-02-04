@@ -255,5 +255,3 @@ save(ascat.bc, ascat.output, QC, all_segs, file = 'ASCAT_objects.Rdata')
 
 colnames(all_segs) <- c("Sample", "Chromosome", "Start Position", "End Position", "Num Markers", "Seg.CN")
 write.table(all_segs, file = paste0("gistic2_segs_", tum_name, "_", norm_name , ".tsv"), col.names = F, row.names = F, quote = F, sep = "\t")
-
-
