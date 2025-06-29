@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] 
+# Changed - 2025-06-29
+- Replaced paths of bedfile and ref file to `resources` directory
+- Eventually merge functionalities with `run_ascat_exome_nr.R` (see tag 0.5.0)
+
 ## [0.5.0] Jan 2025
 # Changed
 - Dockerised analysis + added dev tools
