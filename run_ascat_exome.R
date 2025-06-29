@@ -125,10 +125,10 @@ print(paste("Output dir is", outdir))
 
 ########## Check required input files ##########
 
-# Shared reference files
+# Reference files
 
-ref_file = "/lustre/scratch124/casm/team113/ref/human/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.fa"
-bed_file = "/lustre/scratch125/casm/team113da/projects/DERMATLAS/metadata/references/baitset/DNA/GRCh38_WES5_canonical_pad100.merged.bed"
+ref_file = paste0("PROJECTDIR", "/resources/ascat/GRCh38_full_analysis_set_plus_decoy_hla.fa")
+bed_file = paste0("PROJECTDIR", "/resources/ascat/GRCh38_WES5_canonical_pad100.merged.bed")
 
 # ASCAT/Battenberg files in project directory
 
