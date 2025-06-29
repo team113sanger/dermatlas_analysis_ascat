@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.0] - 2025-06-29
+# Fixed
+- Fixed paths created in 0.6.0 for ref files
 
 ## [0.6.0] 
 # Changed - 2025-06-29
 - Replaced paths of bedfile and ref file to `resources` directory
 - Eventually merge functionalities with `run_ascat_exome_nr.R` (see tag 0.5.0)
 
+## [Unreleased]
 ## [0.5.0] Jan 2025
 # Changed
 - Dockerised analysis + added dev tools
