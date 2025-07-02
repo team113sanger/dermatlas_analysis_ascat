@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-07-02
+# Fixed
+- Fixed backward compatiblity of plotting script
+- `plot_ascat_cna_and_loh.R` now works for a combined segments file and a list of segment files
+
 ## [0.7.0] - 2025-06-29
 # Fixed
 - Fixed paths created in 0.6.0 for ref files
