@@ -260,17 +260,45 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 
 # segfile_list <- read.table(filelist, stringsAsFactors = FALSE, header = TRUE)
 
+## Two cases of inputs: 
+# 1. A file with multiple segment files listed (manual ASCAT)
+# 2. A single file with all segments pre-combined (Nextflow)
 
 
+segfile_list <- read.table(filelist, stringsAsFactors = F, header = F)
+# Use column number to distinguish between the two cases
 
-print(paste("Reading file", filelist))
-segments <- read.table(filelist, header = TRUE, sep = "\t", comment.char = "", check.names = F)
-segments$chr <- sub("chr", "", segments$chr)
+if (ncol(segfile_list == 1)){
+    print(paste("Reading multiple segment files from", filelist))
+    totsamples <- nrow(segfile_list)
+    print(paste("Samples", totsamples))
+    segments <- data.frame()
 
-totsamples <- length(unique(segments$sample))
+    for (segfile in segfile_list$V1) {
+        print(paste("Reading file", segfile))
+        segs <- read.table(segfile, header = T, sep = "\t", comment.char = "", check.names = F)
+    #	segs <- read.table(segfile, header = T, sep = "\t", comment.char = "")
+    #	print(head(segs))
+        segs$chr <- sub("chr", "", segs$chr)
+        if (nrow(segments) == 0) {
+            segments <- segs
+        } else {
+            segments <- rbind(segments, segs)
+        }
+}
+} else if(ncol(segfile_list > 1)) {
+    print(paste("Reading pre-combined segment files from", filelist))
+    segments <- read.table(filelist, header = TRUE, sep = "\t", comment.char = "", check.names = F)
+    segments$chr <- sub("chr", "", segments$chr)
 
-print(paste("Samples", totsamples))
+    totsamples <- length(unique(segments$sample))
 
+    print(paste("Samples", totsamples))
+
+}
+else {
+    stop("Input a file with segment files listed or a single pre-combined segment file")
+}
 # Add patient sex for chrX calls]
 
 segments <- segments |>
