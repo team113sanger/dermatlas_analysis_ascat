@@ -268,7 +268,7 @@ colnames(sample_ploidy) <- c("Sample", "Purity", "Ploidy")
 segfile_list <- read.table(filelist, stringsAsFactors = F, header = F)
 # Use column number to distinguish between the two cases
 
-if (ncol(segfile_list == 1)){
+if (ncol(segfile_list) == 1) {
     print(paste("Reading multiple segment files from", filelist))
     totsamples <- nrow(segfile_list)
     print(paste("Samples", totsamples))
@@ -285,8 +285,8 @@ if (ncol(segfile_list == 1)){
         } else {
             segments <- rbind(segments, segs)
         }
-}
-} else if(ncol(segfile_list > 1)) {
+    }
+} else if(ncol(segfile_list) > 1) {
     print(paste("Reading pre-combined segment files from", filelist))
     segments <- read.table(filelist, header = TRUE, sep = "\t", comment.char = "", check.names = F)
     segments$chr <- sub("chr", "", segments$chr)
@@ -295,8 +295,7 @@ if (ncol(segfile_list == 1)){
 
     print(paste("Samples", totsamples))
 
-}
-else {
+} else {
     stop("Input a file with segment files listed or a single pre-combined segment file")
 }
 # Add patient sex for chrX calls]
