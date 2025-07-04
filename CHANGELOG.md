@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2025-07-04
+# Fixed
+- Reverted change in `make_ascat_release.sh` (commit 5d7e2f2b) to use `tsv2xlsx.R` instead of `maf2xlsx.R` (no MAFs are used)
+
+# Changed
+- Improved aesthetics in frequency plots in `plot_ascat_cna_and_loh.R`
+
 ## [0.8.0] - 2025-07-02
 # Fixed
 - Fixed backward compatiblity of plotting script
