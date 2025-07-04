@@ -8,12 +8,12 @@ PROJECTDIR=$1
 input_dir=$2
 target_dir=$3
 
-# Check for maf2xlsx.R script in either MAF or maf directory
-MAF_SCRIPT=""
-if [[ -e $PROJECTDIR/scripts/maf/maf2xlsx.R ]]; then
-    MAF_SCRIPT="$PROJECTDIR/scripts/maf/maf2xlsx.R"
-elif [[ -e $PROJECTDIR/scripts/MAF/maf2xlsx.R ]]; then
-    MAF_SCRIPT="$PROJECTDIR/scripts/MAF/maf2xlsx.R"
+# Check for tsv2xlsx.R script in either MAF or maf directory
+CONVERT_SCRIPT=""
+if [[ -e $PROJECTDIR/scripts/maf/tsv2xlsx.R ]]; then
+    CONVERT_SCRIPT="$PROJECTDIR/scripts/maf/tsv2xlsx.R"
+elif [[ -e $PROJECTDIR/scripts/MAF/tsv2xlsx.R ]]; then
+    CONVERT_SCRIPT="$PROJECTDIR/scripts/MAF/tsv2xlsx.R"
 fi
 
 
@@ -24,8 +24,8 @@ if [[ -z $PROJECTDIR || -z $input_dir || -z $target_dir ]]; then
 	echo -e "Usage: $0 project_directory input_directory target_directory\n"
 	echo -e "Example: $0 /my/project/path/ /my/project/path/analysis/ASCAT/release_v1 /my/git/path/project/copy_number/ascat/release_v1\n"
 	exit 1
-elif [[ -z "$MAF_SCRIPT" ]]; then
-    echo "Cannot find required script maf2xlsx.R in either $PROJECTDIR/scripts/maf/ or $PROJECTDIR/scripts/MAF/"
+elif [[ -z "$CONVERT_SCRIPT" ]]; then
+    echo "Cannot find required script tsv2xlsx.R in either $PROJECTDIR/scripts/tsv/ or $PROJECTDIR/scripts/MAF/"
     exit 1
 fi
 
@@ -71,7 +71,7 @@ done
 
 for file in `find $input_dir |grep tsv`; do 
 	echo $file
-	Rscript $MAF_SCRIPT $file
+	Rscript $CONVERT_SCRIPT $file
 done
 
 
