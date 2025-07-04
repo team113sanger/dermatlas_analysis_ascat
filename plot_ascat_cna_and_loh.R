@@ -106,31 +106,38 @@ plot_cn_loh <- function(df, outfile, which) {
   loh_plot <- ggplot(data = df, aes(x = Subgroup, y = Value, group = Group, fill = CN)) +
     geom_bar(stat = "identity", width = 1) +
     scale_x_discrete(breaks = df$Group, labels = NULL, expand = c(0.0, 0.0)) +
-    scale_y_continuous(breaks = c(0, 0.5, 1), limits = c(0, 1), expand = c(0.003, 0.003), labels = c("0.0", "0.5", "1.0")) +
+    scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1), limits = c(0, 1), expand = c(0.003, 0.003), labels = c("0.00", "0.25", "0.50", "0.75", "1.00")) +
     facet_grid(~Group, space = "free_x", scales = "free_x", switch = "x") +
     theme_bw() +
-    ggtitle(paste("Frequency of cn-LOH - ", which, "; ", wsize, " windows (n = ", totsamples, ")", sep = "")) +
+    ggtitle(paste("Frequency of cnLOH - ", which, "; ", wsize, " windows (n = ", totsamples, ")", sep = "")) +
+    annotation_custom(grid::linesGrob(x = c(0, 0), gp = grid::gpar(lwd = 1, lty = "dotted", col = "grey25"))) +
     theme(
       strip.placement = "outside",
-      plot.title = element_text(size = 8),
+      plot.title = element_text(size = 10),
       strip.background = element_blank(),
-      panel.border = element_rect(colour = "grey25", size = 0.1, linetype = "solid"),
+      #panel.border = element_rect(colour = "grey25", linewidth = 0.1, linetype = "solid"),
+      panel.border = element_blank(),
       panel.spacing = unit(0.0, "cm"),
       panel.grid.major.x = element_blank(),
       panel.grid.minor.y = element_blank(),
-      panel.grid.major.y = element_line(size = 0.5),
-      legend.position = "none",
-      strip.text.x = element_text(size = 5),
-      strip.text.y = element_text(size = 6),
-      axis.text.y = element_text(size = 6),
-      axis.title.y = element_text(size = 7),
+      panel.grid.major.y = element_line(linewidth = 0.5),
+      #legend.position = "none",
+      legend.title = element_blank(),
+      legend.position = "bottom",
+      legend.key.size = unit(0.25, "cm"),
+      legend.text = element_text(size = 13),
+      strip.text.x = element_text(size = 9.5),
+      strip.text.y = element_text(size = 10),
+      axis.text.y = element_text(size = 14),
+      axis.title.y = element_text(size = 14),
       axis.line.y = element_line()
     ) +
     labs(x = "", y = "Frequency") +
-    scale_fill_manual(values = c("blue", "orange"), na.translate = FALSE) +
-    geom_hline(yintercept = 0, linetype = "solid", color = "black", size = 0.4)
+    #scale_fill_manual(values = c("blue", "orange"), na.translate = FALSE, labels = "cnLOH") +
+    scale_fill_manual(values = c("grey50", "grey50"), na.translate = FALSE, labels = "cnLOH") +
+    geom_hline(yintercept = 0, linetype = "solid", color = "black", linewidth = 0.4)
 
-  pdf(outfile, width = 7.5, height = 3)
+  pdf(outfile, width = 9.5, height = 2.8)
   print(loh_plot)
   dev.off()
 }
@@ -142,35 +149,39 @@ plot_freq <- function(df, outfile, which) {
     # fq_plot <- ggplot(data = df, aes_string(x = "Subgroup", y = "Value", group = "Group", fill = "CN")) +
     geom_bar(stat = "identity", width = 1) +
     scale_x_discrete(breaks = df$Group, labels = NULL, expand = c(0.0, 0.0)) +
-    scale_y_continuous(breaks = c(-1, -0.5, 0, 0.5, 1), limits = c(-1, 1), expand = c(0.003, 0.003), labels = c("1.0", "0.5", "0.0", "0.5", "1.0")) +
+    scale_y_continuous(breaks = c(-1, -0.5, 0, 0.5, 1), limits = c(-1, 1), expand = c(0.003, 0.003), labels = c("1.00", "0.50", "0.00", "0.50", "1.00")) +
     facet_grid(~Group, space = "free_x", scales = "free_x", switch = "x") +
     theme_bw() +
     ggtitle(paste("Frequency of SCNAs - ", which, " gains or losses; ", wsize, " windows (n = ", totsamples, ")", sep = "")) +
+    annotation_custom(grid::linesGrob(x = c(0, 0), gp = grid::gpar(lwd = 1, lty = "dotted", col = "grey25"))) +
     theme(
       strip.placement = "outside",
-      plot.title = element_text(size = 8),
+      plot.title = element_text(size = 10),
       strip.background = element_blank(),
-      panel.border = element_rect(colour = "grey25", size = 0.1, linetype = "solid"),
+      #panel.border = element_rect(colour = "grey25", linewidth = 0.1, linetype = "solid"),
+      panel.border = element_blank(),
       panel.spacing = unit(0.0, "cm"),
       panel.grid.major.x = element_blank(),
       panel.grid.minor.y = element_blank(),
-      panel.grid.major.y = element_line(size = 0.5),
+      panel.grid.major.y = element_line(linewidth = 0.5),
       legend.title = element_blank(),
       legend.position = "bottom",
       legend.key.size = unit(0.25, "cm"),
-      legend.text = element_text(size = 6),
-      strip.text.x = element_text(size = 5),
-      strip.text.y = element_text(size = 6),
-      axis.text.y = element_text(size = 6),
-      axis.title.y = element_text(size = 7),
+      legend.text = element_text(size = 13),
+      strip.text.x = element_text(size = 9.5),
+      strip.text.y = element_text(size = 10),
+      axis.text.y = element_text(size = 14),
+      axis.title.y = element_text(size = 15),
       axis.line.y = element_line()
     ) +
     labs(x = "", y = "Frequency") +
-    scale_fill_manual(values = c("blue", "orange"), na.translate = FALSE) +
-    geom_hline(yintercept = 0, linetype = "solid", color = "black", size = 0.4)
+    #scale_fill_manual(values = c("red1", "navyblue"), na.translate = FALSE) +
+    #scale_fill_manual(values = c("#FF2800", "#051650"), na.translate = FALSE) +
+    scale_fill_manual(values = c("#FF3131", "#051650"), na.translate = FALSE) +
+    geom_hline(yintercept = 0, linetype = "solid", color = "black", linewidth = 0.4)
 
 
-  pdf(outfile, width = 7.5, height = 3)
+  pdf(outfile, width = 9.5, height = 2.8)
   print(fq_plot)
   dev.off()
 }
