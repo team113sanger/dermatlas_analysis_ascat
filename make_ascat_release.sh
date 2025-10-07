@@ -24,9 +24,26 @@ if [[ -z $PROJECTDIR || -z $input_dir || -z $target_dir ]]; then
 	echo -e "Usage: $0 project_directory input_directory target_directory\n"
 	echo -e "Example: $0 /my/project/path/ /my/project/path/analysis/ASCAT/release_v1 /my/git/path/project/copy_number/ascat/release_v1\n"
 	exit 1
+<<<<<<< Updated upstream
 elif [[ -z "$CONVERT_SCRIPT" ]]; then
     echo "Cannot find required script tsv2xlsx.R in either $PROJECTDIR/scripts/tsv/ or $PROJECTDIR/scripts/MAF/"
     exit 1
+=======
+fi
+
+
+SCRIPTDIR=$PROJECTDIR/scripts/maf/
+if [[ -e $PROJECTDIR/scripts/maf ]]; then
+    SCRIPTDIR="${PROJECTDIR}/scripts/maf"
+elif [[ -e $PROJECTDIR/scripts/MAF ]]; then
+    SCRIPTDIR="${PROJECTDIR}/scripts/MAF"
+fi
+
+
+if [[ ! -e $SCRIPTDIR ]]; then
+	echo "Cannot find required script $PROJECTDIR/scripts/MAF/tsv2xlsx.R or $PROJECTDIR/scripts/maf/tsv2xlsx.R"
+	exit 1
+>>>>>>> Stashed changes
 fi
 
 
@@ -71,7 +88,11 @@ done
 
 for file in `find $input_dir |grep tsv`; do 
 	echo $file
+<<<<<<< Updated upstream
 	Rscript $CONVERT_SCRIPT $file
+=======
+	Rscript ${SCRIPTDIR} $file
+>>>>>>> Stashed changes
 done
 
 
